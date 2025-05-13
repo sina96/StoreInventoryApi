@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "HDlhaxPbMynQi7+iHZlyMqT/Vnekp1iScAFoohLEZ3I=",
+  "Source": "StoreInventoryApi",
+  "BasePath": "_content/StoreInventoryApi",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
