@@ -7,12 +7,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 {
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Product>()
-            .HasIndex(p => p.ArticleName)
-            .IsUnique();
-        
-        modelBuilder.Entity<Supplier>()
-            .OwnsOne(s => s.Address);
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
        /* modelBuilder.Entity<Product>().HasData(
             new Product { Id = 1, ArticleName = "Laptop", UnitPrice = 1000, Stock = 10, IsActive = true },
             new Product { Id = 2, ArticleName = "Mouse", UnitPrice = 50, Stock = 200, IsActive = true },
