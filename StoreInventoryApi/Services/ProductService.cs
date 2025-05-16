@@ -1,56 +1,52 @@
-using Microsoft.EntityFrameworkCore;
-using StoreInventoryApi.Data;
 using StoreInventoryApi.DTOs;
 using StoreInventoryApi.Models;
+using StoreInventoryApi.Repositories;
 
 namespace StoreInventoryApi.Services;
 
-public class ProductService(AppDbContext context) : IProductService
+public class ProductService(IUnitOfWork unitOfWork) : IProductService
 {
     public async Task<IEnumerable<Product>> GetAll() =>
-        await context.Products.ToListAsync();
-
-    public async Task<IEnumerable<Product>> GetActive() =>
-        await context.Products.Where(p => p.IsActive).ToListAsync();
-
-    public async Task<IEnumerable<Product>> GetWithReviews() =>
-        await context.Products.Include(p => p.Reviews).ToListAsync();
-
-    public async Task<IEnumerable<ProductDto>> GetProjected()
-    {
-        return await context.Products
-            .Select(p => new ProductDto
-            {
-                Id = p.Id,
-                ProductName = p.ProductName,
-                UnitPrice = p.UnitPrice,
-                SupplierName = p.Supplier != null ? p.Supplier.Name : null
-            })
-            .ToListAsync();
-    }
-    
-    public async Task<IEnumerable<Product>> FilterByPrice(decimal min, decimal max) =>
-        await context.Products
-            .Where(p => p.UnitPrice >= min && p.UnitPrice <= max)
-            .ToListAsync();
+        await unitOfWork.Products.GetAllAsync();
 
     public async Task<Product?> GetById(int id) =>
-        await context.Products.FindAsync(id);
+        await unitOfWork.Products.GetByIdAsync(id);
 
     public async Task<Product> Create(Product product)
     {
-        context.Products.Add(product);
-        await context.SaveChangesAsync();
+        await unitOfWork.Products.AddAsync(product);
+        await unitOfWork.CompleteAsync();
         return product;
+    }
+
+    public async Task<bool> Delete(int id)
+    {
+        var product = await unitOfWork.Products.GetByIdAsync(id);
+        if (product is null) return false;
+
+        await unitOfWork.Products.DeleteAsync(product);
+        await unitOfWork.CompleteAsync();
+        return true;
     }
 
     public async Task<bool> SoftDelete(int id)
     {
-        var product = await context.Products.FindAsync(id);
-        if (product is null) return false;
+        var updated = await unitOfWork.Products.SoftDeleteAsync(id);
+        if (!updated) return false;
 
-        product.IsActive = false;
-        await context.SaveChangesAsync();
+        await unitOfWork.CompleteAsync();
         return true;
     }
+
+    public async Task<IEnumerable<Product>> GetActive() =>
+        await unitOfWork.Products.GetActiveAsync();
+
+    public async Task<IEnumerable<Product>> GetWithReviews() =>
+        await unitOfWork.Products.GetWithReviewsAsync();
+
+    public async Task<IEnumerable<ProductDto>> GetProjected() =>
+        await unitOfWork.Products.GetProjectedAsync();
+
+    public async Task<IEnumerable<Product>> FilterByPrice(decimal min, decimal max) =>
+        await unitOfWork.Products.FilterByPriceAsync(min, max);
 }
